@@ -1,0 +1,106 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Goal {
+  FAT_LOSS
+  MUSCLE_GAIN
+  RECOMPOSITION
+  MAINTENANCE
+}
+
+enum TrainingLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum Gender {
+  MALE
+  FEMALE
+  OTHER
+}
+
+enum DietType {
+  VEGETARIAN
+  NON_VEGETARIAN
+  VEGAN
+  EGGETARIAN
+  PESCATARIAN
+  JAIN
+  GLUTEN_FREE
+  LACTOSE_FREE
+}
+
+model GymSettings {
+  id           String   @id @default(cuid())
+  gymName      String
+  logoUrl      String?
+  address      String?
+  phone        String?
+  tagline      String?
+  primaryColor String   @default("#1a56db")
+  updatedAt    DateTime @updatedAt
+}
+
+model Member {
+  id             String          @id @default(cuid())
+  memberId       String          @unique
+  name           String
+  phone          String?
+  email          String?
+  age            Int
+  gender         Gender
+  height         Float
+  goal           Goal
+  trainingLevel  TrainingLevel
+  joinDate       DateTime        @default(now())
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  dietaryProfile DietaryProfile?
+  assessments    Assessment[]
+}
+
+model DietaryProfile {
+  id                 String   @id @default(cuid())
+  memberId           String   @unique
+  member             Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  dietType           DietType @default(NON_VEGETARIAN)
+  mealsPerDay        Int      @default(3)
+  eatsBreakfast      Boolean  @default(true)
+  eatsLunch          Boolean  @default(true)
+  eatsDinner         Boolean  @default(true)
+  frequentSnacking   Boolean  @default(false)
+  lateNightEating    Boolean  @default(false)
+  supplementsAllowed Boolean  @default(true)
+}
+
+model Assessment {
+  id              String   @id @default(cuid())
+  memberId        String
+  member          Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  date            DateTime @default(now())
+  weight          Float
+  bmi             Float
+  bodyFat         Float
+  musclePct       Float
+  visceralFat     Float
+  subcutaneousFat Float?
+  bmr             Float?
+  metabolicAge    Int?
+  bodyWater       Float?
+  proteinPct      Float?
+  boneMass        Float?
+  notes           String?
+  createdAt       DateTime @default(now())
+
+  @@index([memberId, date])
+}
