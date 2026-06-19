@@ -46,8 +46,13 @@ export default async function ReportPreviewPage({
 
   const gymSettings = await prisma.gymSettings.findFirst()
 
+  let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+  if (appUrl.includes('localhost') && process.env.VERCEL_URL) {
+    appUrl = `https://${process.env.VERCEL_URL}`
+  }
+
   const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Hi! Here is your BCA Report from ${gymSettings?.gymName ?? 'FitnessTouch'}. Download your PDF here: ${process.env.NEXT_PUBLIC_APP_URL}/api/report/${assessmentId}`
+    `Hi! Here is your BCA Report from ${gymSettings?.gymName ?? 'FitnessTouch'}. Download your PDF here: ${appUrl}/api/report/${assessmentId}`
   )}`
 
   const statusConfig = {
