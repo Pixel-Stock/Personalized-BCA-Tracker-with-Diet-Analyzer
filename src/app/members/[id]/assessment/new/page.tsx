@@ -165,62 +165,29 @@ export default function NewAssessmentPage() {
                       error={errors.subcutaneousFat?.message}
                       {...register('subcutaneousFat', { valueAsNumber: true, setValueAs: v => v === '' ? null : parseFloat(v) })}
                     />
-                  </div>
-                </Card>
-
-                {/* Optional BCA Values */}
-                <Card title="Additional Metrics (Optional)">
-                  <div className="grid grid-cols-2 gap-4">
                     <Input
                       label="BMR (kcal/day)"
                       type="number"
                       step="1"
+                      required
                       placeholder="e.g. 1650"
                       hint="Basal Metabolic Rate from machine"
-                      {...register('bmr', { valueAsNumber: true, setValueAs: v => v === '' ? null : parseFloat(v) })}
+                      error={errors.bmr?.message}
+                      {...register('bmr', { valueAsNumber: true })}
                     />
                     <Input
                       label="Metabolic Age (years)"
                       type="number"
                       step="1"
+                      required
                       placeholder="e.g. 28"
-                      {...register('metabolicAge', { valueAsNumber: true, setValueAs: v => v === '' ? null : parseInt(v) })}
-                    />
-                    <Input
-                      label="Body Water %"
-                      type="number"
-                      step="0.1"
-                      placeholder="e.g. 58.5"
-                      {...register('bodyWater', { valueAsNumber: true, setValueAs: v => v === '' ? null : parseFloat(v) })}
-                    />
-                    <Input
-                      label="Protein %"
-                      type="number"
-                      step="0.1"
-                      placeholder="e.g. 17.8"
-                      {...register('proteinPct', { valueAsNumber: true, setValueAs: v => v === '' ? null : parseFloat(v) })}
-                    />
-                    <Input
-                      label="Bone Mass (kg)"
-                      type="number"
-                      step="0.1"
-                      placeholder="e.g. 3.2"
-                      {...register('boneMass', { valueAsNumber: true, setValueAs: v => v === '' ? null : parseFloat(v) })}
-                    />
-                  </div>
-
-                  <div className="mt-4">
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
-                      Trainer Notes (optional)
-                    </label>
-                    <textarea
-                      placeholder="Any observations, feedback, or notes for this assessment…"
-                      rows={3}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                      {...register('notes')}
+                      error={errors.metabolicAge?.message}
+                      {...register('metabolicAge', { valueAsNumber: true })}
                     />
                   </div>
                 </Card>
+
+
 
                 <div className="flex gap-3">
                   <Button type="submit" loading={submitting} size="lg">

@@ -9,6 +9,10 @@ import { format } from 'date-fns'
 import React from 'react'
 import type { ReportData } from '@/types'
 
+export const dynamic = 'force-dynamic'
+export const maxDuration = 60
+
+
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ assessmentId: string }> }
@@ -92,8 +96,9 @@ export async function GET(
         'Content-Length': pdfBuffer.length.toString(),
       },
     })
-  } catch (error) {
+  } catch (error: any) {
     console.error('GET /api/report/[assessmentId] error:', error)
-    return NextResponse.json({ error: 'Failed to generate PDF report' }, { status: 500 })
+    return NextResponse.json({ error: `Failed to generate PDF report: ${error.message}` }, { status: 500 })
   }
 }
+
