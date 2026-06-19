@@ -1,7 +1,6 @@
 // src/app/api/assessments/[memberId]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createServerClient } from '@/lib/supabase/server'
 
 // GET /api/assessments/[memberId] — all assessments for a member
 export async function GET(
@@ -9,10 +8,6 @@ export async function GET(
   { params }: { params: Promise<{ memberId: string }> }
 ) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
     const { memberId } = await params
 
     const assessments = await prisma.assessment.findMany({

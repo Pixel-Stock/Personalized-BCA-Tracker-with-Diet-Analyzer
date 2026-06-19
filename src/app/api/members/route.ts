@@ -2,15 +2,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
 import { MemberSchema } from '@/lib/utils/validators'
-import { createServerClient } from '@/lib/supabase/server'
 
 // GET /api/members — list all members with optional search
 export async function GET(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
     const { searchParams } = new URL(request.url)
     const search = searchParams.get('search')
 
@@ -44,10 +39,6 @@ export async function GET(request: NextRequest) {
 // POST /api/members — create new member with dietary profile
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
     const body = await request.json()
     const parsed = MemberSchema.safeParse(body)
 

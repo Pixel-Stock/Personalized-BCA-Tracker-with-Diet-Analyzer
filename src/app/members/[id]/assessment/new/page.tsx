@@ -22,14 +22,8 @@ export default function NewAssessmentPage() {
   const [previousAssessment, setPreviousAssessment] = useState<Assessment | null>(null)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState<string>()
 
   useEffect(() => {
-    import('@/lib/supabase').then(({ createClient }) => {
-      const supabase = createClient()
-      supabase.auth.getUser().then(({ data: { user } }) => setUserEmail(user?.email))
-    })
-
     fetch(`/api/members/${memberId}`)
       .then((r) => r.json())
       .then((d) => {
@@ -39,6 +33,7 @@ export default function NewAssessmentPage() {
         }
       })
   }, [memberId])
+
 
   const {
     register,
@@ -77,7 +72,7 @@ export default function NewAssessmentPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar userEmail={userEmail} />
+      <Sidebar />
       <main className="flex-1 lg:ml-56">
         <TopBar
           title={member ? `New Assessment — ${member.name}` : 'New Assessment'}

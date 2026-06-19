@@ -1,13 +1,10 @@
 'use client'
 // src/components/layout/Sidebar.tsx
+// No authentication — purely navigation
+
 import React, { useState } from 'react'
 import Link from 'next/link'
-import { usePathname, useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase'
-
-interface SidebarProps {
-  userEmail?: string
-}
+import { usePathname } from 'next/navigation'
 
 const navItems = [
   {
@@ -51,19 +48,9 @@ function NavLink({ href, label, icon, active }: { href: string; label: string; i
   )
 }
 
-export function Sidebar({ userEmail }: SidebarProps) {
+export function Sidebar() {
   const pathname = usePathname()
-  const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
-  const [signingOut, setSigningOut] = useState(false)
-
-  const supabase = createClient()
-
-  const handleSignOut = async () => {
-    setSigningOut(true)
-    await supabase.auth.signOut()
-    router.push('/login')
-  }
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
@@ -91,30 +78,6 @@ export function Sidebar({ userEmail }: SidebarProps) {
           />
         ))}
       </nav>
-
-      {/* User Footer */}
-      <div className="px-3 py-4 border-t border-gray-200">
-        {userEmail && (
-          <div className="flex items-center gap-2 px-3 py-2 mb-2">
-            <div className="w-7 h-7 bg-blue-100 rounded-full flex items-center justify-center">
-              <span className="text-xs font-bold text-blue-600">
-                {userEmail.charAt(0).toUpperCase()}
-              </span>
-            </div>
-            <span className="text-xs text-gray-600 truncate">{userEmail}</span>
-          </div>
-        )}
-        <button
-          onClick={handleSignOut}
-          disabled={signingOut}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium text-gray-600 hover:bg-red-50 hover:text-red-600 transition-colors duration-150"
-        >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-          </svg>
-          {signingOut ? 'Signing out…' : 'Sign Out'}
-        </button>
-      </div>
     </div>
   )
 

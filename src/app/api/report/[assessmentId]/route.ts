@@ -1,10 +1,12 @@
+// src/app/api/report/[assessmentId]/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/prisma'
-import { createServerClient } from '@/lib/supabase/server'
 import { comparisonEngine } from '@/lib/engines/comparisonEngine'
 import { nutritionEngine } from '@/lib/engines/nutritionEngine'
+import { generateAiRecommendations } from '@/lib/gemini'
 import { renderToBuffer } from '@react-pdf/renderer'
 import { ReportDocument } from '@/pdf/ReportDocument'
+import { GYM_CONFIG } from '@/lib/gymConfig'
 import { format } from 'date-fns'
 import React from 'react'
 import type { ReportData } from '@/types'
@@ -12,16 +14,11 @@ import type { ReportData } from '@/types'
 export const dynamic = 'force-dynamic'
 export const maxDuration = 60
 
-
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ assessmentId: string }> }
 ) {
   try {
-    const supabase = await createServerClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
     const { assessmentId } = await params
 
     // 1. Fetch the target assessment
@@ -44,7 +41,7 @@ export async function GET(
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
     }
 
-    // 3. Fetch previous assessment (the one immediately before current date)
+    // 3. Fetch previous assessment
     const previousAssessment = await prisma.assessment.findFirst({
       where: {
         memberId: currentAssessment.memberId,
@@ -53,34 +50,28 @@ export async function GET(
       orderBy: { date: 'desc' },
     })
 
-    // 4. Run comparison engine
+    // 4. Run engines
     const comparison = comparisonEngine(currentAssessment, previousAssessment)
-
-    // 5. Run nutrition engine
     const nutrition = nutritionEngine(member, member.dietaryProfile, currentAssessment)
 
-    // 6. Fetch gym settings
-    let gymSettings = await prisma.gymSettings.findFirst()
-    if (!gymSettings) {
-      gymSettings = await prisma.gymSettings.create({
-        data: { gymName: 'FitnessTouch', primaryColor: '#1a56db' },
-      })
-    }
+    // 5. Generate AI recommendations via Gemini
+    const aiRecommendations = await generateAiRecommendations(member, currentAssessment, nutrition)
 
-    // 7. Render PDF
-    const reportData = {
+    // 6. Build report data (use hardcoded GYM_CONFIG — no DB lookup needed)
+    const reportData: ReportData = {
       member,
       currentAssessment,
       previousAssessment,
       comparison,
       nutrition,
-      gymSettings,
+      gymSettings: GYM_CONFIG,
+      aiRecommendations,
     }
 
+    // 7. Render PDF
     const pdfBuffer = await renderToBuffer(
-      // Use type assertion to avoid version-specific Document prop type mismatch
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      React.createElement(ReportDocument, { data: reportData as ReportData }) as any
+      React.createElement(ReportDocument, { data: reportData }) as any
     )
 
     // 8. Build filename
@@ -98,7 +89,6 @@ export async function GET(
     })
   } catch (error: any) {
     console.error('GET /api/report/[assessmentId] error:', error)
-    return NextResponse.json({ error: `Failed to generate PDF report: ${error.message}` }, { status: 500 })
+    return NextResponse.json({ error: `Failed to generate PDF: ${error.message}` }, { status: 500 })
   }
 }
-

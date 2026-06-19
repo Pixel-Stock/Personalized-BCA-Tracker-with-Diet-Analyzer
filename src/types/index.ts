@@ -117,6 +117,7 @@ export interface ReportData {
   comparison: ComparisonResult
   nutrition: NutritionPlan
   gymSettings: GymSettings
+  aiRecommendations: string[]
 }
 
 export interface DashboardStats {

@@ -13,17 +13,8 @@ export default function MembersPage() {
   const [members, setMembers] = useState<MemberListItem[]>([])
   const [filtered, setFiltered] = useState<MemberListItem[]>([])
   const [loading, setLoading] = useState(true)
-  const [userEmail, setUserEmail] = useState<string>()
 
   useEffect(() => {
-    // Get user info
-    import('@/lib/supabase').then(({ createClient }) => {
-      const supabase = createClient()
-      supabase.auth.getUser().then(({ data: { user } }) => {
-        setUserEmail(user?.email)
-      })
-    })
-
     fetchMembers()
   }, [])
 
@@ -59,7 +50,7 @@ export default function MembersPage() {
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar userEmail={userEmail} />
+      <Sidebar />
       <main className="flex-1 lg:ml-56">
         <TopBar
           title="Members"

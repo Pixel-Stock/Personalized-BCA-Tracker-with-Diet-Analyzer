@@ -1,7 +1,6 @@
 // src/app/members/[id]/report/[assessmentId]/page.tsx
 import React from 'react'
-import { createServerClient } from '@/lib/supabase/server'
-import { redirect, notFound } from 'next/navigation'
+import { notFound } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { Sidebar } from '@/components/layout/Sidebar'
 import { TopBar } from '@/components/layout/TopBar'
@@ -12,6 +11,7 @@ import { nutritionEngine } from '@/lib/engines/nutritionEngine'
 import { formatDate, formatGoal } from '@/lib/utils/formatters'
 import Link from 'next/link'
 import { ReportDownloadButton } from './ReportDownloadButton'
+import { WhatsAppShareButton } from './WhatsAppShareButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,10 +20,6 @@ export default async function ReportPreviewPage({
 }: {
   params: Promise<{ id: string; assessmentId: string }>
 }) {
-  const supabase = await createServerClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) redirect('/login')
-
   const { id: memberId, assessmentId } = await params
 
   const [member, currentAssessment] = await Promise.all([
@@ -46,15 +42,6 @@ export default async function ReportPreviewPage({
 
   const gymSettings = await prisma.gymSettings.findFirst()
 
-  let appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-  if (appUrl.includes('localhost') && process.env.VERCEL_URL) {
-    appUrl = `https://${process.env.VERCEL_URL}`
-  }
-
-  const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(
-    `Hi! Here is your BCA Report from ${gymSettings?.gymName ?? 'FitnessTouch'}. Download your PDF here: ${appUrl}/api/report/${assessmentId}`
-  )}`
-
   const statusConfig = {
     EXCELLENT: { variant: 'success' as const, label: '🏆 Excellent Progress' },
     GOOD:      { variant: 'success' as const, label: '✓ Good Progress' },
@@ -67,7 +54,7 @@ export default async function ReportPreviewPage({
 
   return (
     <div className="flex min-h-screen bg-gray-50">
-      <Sidebar userEmail={user.email} />
+      <Sidebar />
       <main className="flex-1 lg:ml-56">
         <TopBar
           title="Report Preview"
@@ -93,18 +80,18 @@ export default async function ReportPreviewPage({
               </div>
               <div className="flex gap-3 flex-shrink-0">
                 <ReportDownloadButton assessmentId={assessmentId} memberName={member.name} />
-                <a
-                  href={whatsappUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 px-4 py-2 bg-green-500 text-white rounded-lg text-sm font-medium hover:bg-green-600 transition-colors"
-                >
-                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                    <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.555 4.104 1.523 5.828L0 24l6.352-1.499C8.047 23.447 9.987 24 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.892 0-3.665-.516-5.181-1.411l-.371-.22-3.827.903.965-3.719-.241-.388C2.527 15.68 2 13.905 2 12 2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/>
-                  </svg>
-                  Share via WhatsApp
-                </a>
+                <WhatsAppShareButton
+                  assessmentId={assessmentId}
+                  memberName={member.name}
+                  height={member.height}
+                  weight={currentAssessment.weight}
+                  musclePct={currentAssessment.musclePct}
+                  bodyFat={currentAssessment.bodyFat}
+                  visceralFat={currentAssessment.visceralFat}
+                  subcutaneousFat={currentAssessment.subcutaneousFat}
+                  bmr={currentAssessment.bmr}
+                  bmi={currentAssessment.bmi}
+                />
               </div>
             </div>
           </Card>

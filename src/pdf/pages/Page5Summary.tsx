@@ -3,7 +3,6 @@ import React from 'react'
 import { Page, View, Text } from '@react-pdf/renderer'
 import { pdfStyles } from '../styles/pdfStyles'
 import { SectionHeader } from '../components/SectionHeader'
-import { getStatus } from '@/lib/engines/healthRanges'
 import type { ReportData } from '@/types'
 import { addDays, format } from 'date-fns'
 
@@ -12,53 +11,10 @@ interface Page5SummaryProps {
 }
 
 export function Page5Summary({ data }: Page5SummaryProps) {
-  const { member, currentAssessment, comparison, gymSettings } = data
+  const { member, currentAssessment, comparison, gymSettings, aiRecommendations } = data
   const a = currentAssessment
-  const g = member.gender
 
-  // Build priority recommendations based on current metrics
-  const recommendations: string[] = []
-
-  const visceralStatus = getStatus('visceralFat', a.visceralFat, g)
-  const muscleStatus = getStatus('musclePct', a.musclePct, g)
-  const bodyFatStatus = getStatus('bodyFat', a.bodyFat, g)
-  const bodyWaterStatus = a.bodyWater != null ? getStatus('bodyWater', a.bodyWater, g) : 'HEALTHY'
-
-  if (visceralStatus === 'ABOVE') {
-    recommendations.push(
-      'Prioritize 30 minutes of cardiovascular exercise 4× per week. Visceral fat responds strongly to aerobic activity and dietary changes.'
-    )
-  }
-
-  if (muscleStatus === 'BELOW') {
-    recommendations.push(
-      'Increase resistance training frequency to at least 3 sessions per week. Focus on compound movements (squats, deadlifts, bench press) with progressive overload.'
-    )
-  }
-
-  if (bodyFatStatus === 'ABOVE') {
-    recommendations.push(
-      `Maintain caloric deficit of 300–400 kcal/day as prescribed in your nutrition plan. Track food intake for at least 4 weeks for measurable results.`
-    )
-  }
-
-  if (bodyWaterStatus === 'BELOW') {
-    recommendations.push(
-      `Increase daily water intake to ${data.nutrition.hydrationLitres} litres immediately. Dehydration reduces metabolism and impairs muscle recovery.`
-    )
-  }
-
-  // If no specific issues, give general advice
-  if (recommendations.length === 0) {
-    recommendations.push(
-      'Maintain your current training and nutrition consistency — your metrics are within healthy ranges.',
-      'Consider progressive overload in your training — increase weights or reps every 2–3 weeks to continue progress.',
-      `Keep your nutrition aligned with your ${member.goal === 'FAT_LOSS' ? 'fat loss' : member.goal === 'MUSCLE_GAIN' ? 'muscle gain' : 'body composition'} goal.`
-    )
-  }
-
-  // Ensure max 3 recommendations
-  const topRecs = recommendations.slice(0, 3)
+  const topRecs = (aiRecommendations ?? []).slice(0, 3)
 
   const nextAssessmentDate = format(
     addDays(new Date(a.date), 30),
@@ -92,8 +48,8 @@ export function Page5Summary({ data }: Page5SummaryProps) {
         </Text>
       </View>
 
-      {/* Priority Recommendations */}
-      <SectionHeader title="Top Priority Recommendations" backgroundColor={gymSettings.primaryColor} />
+      {/* AI-Personalised Recommendations */}
+      <SectionHeader title="AI-Personalised Action Plan" backgroundColor={gymSettings.primaryColor} />
 
       {topRecs.map((rec, i) => (
         <View key={i} style={pdfStyles.recommendationCard}>
@@ -117,11 +73,10 @@ export function Page5Summary({ data }: Page5SummaryProps) {
 
       {/* Motivational Closing */}
       <Text style={pdfStyles.motivationalText}>
-        "Consistency is the foundation of every transformation.{'\n'}
-        See you at your next assessment."
+        {'"Consistency is the foundation of every transformation.\nSee you at your next assessment."'}
       </Text>
 
-      {/* Gym Contact Footer (larger) */}
+      {/* Gym Contact Footer */}
       <View style={{
         borderTopWidth: 2,
         borderTopColor: gymSettings.primaryColor,
